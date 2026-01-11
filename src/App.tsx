@@ -1,4 +1,3 @@
-import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React, { createContext, useEffect, useMemo, useState } from "react";
 
@@ -45,15 +44,13 @@ export default function App() {
 
   return (
     <WorkbookContext.Provider value={ctx}>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen name="Home" component={HomeScreen} options={{ title: "AAC Workbook" }} />
-          <Stack.Screen name="Category" component={CategoryScreen} options={{ title: "Category" }} />
-          <Stack.Screen name="ParentPin" component={ParentPinScreen} options={{ title: "Parent Mode" }} />
-          <Stack.Screen name="EditCard" component={EditCardScreen} options={{ title: "Edit Card" }} />
-          <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} options={{ title: "AAC Workbook" }} />
+        <Stack.Screen name="Category" component={CategoryScreen} options={{ title: "Category" }} />
+        <Stack.Screen name="ParentPin" component={ParentPinScreen} options={{ title: "Parent Mode" }} />
+        <Stack.Screen name="EditCard" component={EditCardScreen} options={{ title: "Edit Card" }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
+      </Stack.Navigator>
     </WorkbookContext.Provider>
   );
 }
