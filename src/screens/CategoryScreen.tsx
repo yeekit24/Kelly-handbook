@@ -1,7 +1,7 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Speech from "expo-speech";
 import React, { useContext, useMemo, useState } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { RootStackParamList, WorkbookContext } from "../App";
 import CardTile from "../ui/CardTile";
 import SentenceBar from "../ui/SentenceBar";
@@ -25,6 +25,16 @@ export default function CategoryScreen({ route, navigation }: Props) {
   React.useEffect(() => {
     navigation.setOptions({ title: category?.name ?? "Category" });
   }, [category?.name]);
+
+  React.useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable onPress={() => navigation.navigate("ActionMenu")} style={styles.addActionButton}>
+          <Text style={styles.addActionText}>Add Action</Text>
+        </Pressable>
+      ),
+    });
+  }, [navigation]);
 
   const speak = (text: string) => {
     Speech.stop();
@@ -56,9 +66,9 @@ export default function CategoryScreen({ route, navigation }: Props) {
         renderItem={({ item }) => (
           <CardTile
             label={item.label}
+            secondaryLabel={item.labelZh}
             imageUri={item.imageUri}
             onPress={() => onTapCard(item.label, item.speakText)}
-            onLongPress={() => navigation.navigate("ParentPin", { next: "EditCard", params: { cardId: item.id, categoryId } })}
           />
         )}
       />
@@ -68,4 +78,13 @@ export default function CategoryScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fafafa" },
+  addActionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  addActionText: { fontWeight: "800", fontSize: 14 },
 });

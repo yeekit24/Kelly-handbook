@@ -17,6 +17,7 @@ export default function EditCardScreen({ route, navigation }: Props) {
   );
 
   const [label, setLabel] = useState(existing?.label ?? "");
+  const [labelZh, setLabelZh] = useState(existing?.labelZh ?? "");
   const [speakText, setSpeakText] = useState(existing?.speakText ?? "");
   const [imageUri, setImageUri] = useState(existing?.imageUri ?? "");
 
@@ -32,24 +33,46 @@ export default function EditCardScreen({ route, navigation }: Props) {
   };
 
   const save = () => {
-    if (!label.trim()) return Alert.alert("Missing label", "Please enter a label.");
+    if (!label.trim()) return Alert.alert("Missing English", "Please enter the English word.");
+    if (!labelZh.trim()) return Alert.alert("Missing Chinese", "Please enter the Chinese word.");
 
     setState((prev) => {
       if (!prev) return prev;
       const cards = [...prev.cards];
       if (existing) {
         const idx = cards.findIndex((c) => c.id === existing.id);
-        cards[idx] = { ...existing, label: label.trim(), speakText: speakText.trim() || undefined, imageUri: imageUri || undefined };
-      } else {
-        const newCard: AacCard = {
-          id: `c_${Date.now()}`,
-          categoryId,
+        cards[idx] = {
+          ...existing,
           label: label.trim(),
+          labelZh: labelZh.trim(),
+          speakText: speakText.trim() || undefined,
+          imageUri: imageUri || undefined,
+        };
+      } else {
+        const normalizedLabel = label.trim().toLowerCase();
+        const existingMatchIndex = cards.findIndex(
+          (c) => c.categoryId === categoryId && c.label.toLowerCase() === normalizedLabel && !c.isQuick
+        );
+        const newCard: AacCard = {
+          label: label.trim(),
+          labelZh: labelZh.trim(),
+          categoryId,
+          id: `c_${Date.now()}`,
           speakText: speakText.trim() || undefined,
           imageUri: imageUri || undefined,
           sortOrder: cards.filter((c) => c.categoryId === categoryId && !c.isQuick).length + 1,
         };
-        cards.push(newCard);
+        if (existingMatchIndex >= 0) {
+          const existingMatch = cards[existingMatchIndex];
+          cards[existingMatchIndex] = {
+            ...existingMatch,
+            ...newCard,
+            id: existingMatch.id,
+            sortOrder: existingMatch.sortOrder,
+          };
+        } else {
+          cards.push(newCard);
+        }
       }
       return { ...prev, cards };
     });
@@ -63,8 +86,11 @@ export default function EditCardScreen({ route, navigation }: Props) {
         {imageUri ? <Image source={{ uri: imageUri }} style={styles.img} /> : <Text style={styles.imgHint}>Tap to pick image</Text>}
       </Pressable>
 
-      <Text style={styles.label}>Label (big text)</Text>
+      <Text style={styles.label}>English word</Text>
       <TextInput value={label} onChangeText={setLabel} style={styles.input} placeholder="e.g., Water" />
+
+      <Text style={styles.label}>Chinese word</Text>
+      <TextInput value={labelZh} onChangeText={setLabelZh} style={styles.input} placeholder="e.g., 水" />
 
       <Text style={styles.label}>Speak text (optional)</Text>
       <TextInput value={speakText} onChangeText={setSpeakText} style={styles.input} placeholder="Leave empty to speak the label" />

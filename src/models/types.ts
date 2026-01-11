@@ -6,10 +6,11 @@ export type Category = {
     sortOrder: number;
   };
   
-  export type AacCard = {
+export type AacCard = {
     id: string;
     categoryId: string;
     label: string;
+    labelZh?: string;
     speakText?: string;  // defaults to label
     imageUri?: string;   // local file uri from ImagePicker
     isQuick?: boolean;
