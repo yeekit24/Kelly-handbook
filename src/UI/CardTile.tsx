@@ -3,12 +3,12 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function CardTile(props: {
   label: string;
+  secondaryLabel?: string;
   imageUri?: string;
   onPress: () => void;
-  onLongPress?: () => void;
 }) {
   return (
-    <Pressable onPress={props.onPress} onLongPress={props.onLongPress} style={styles.tile}>
+    <Pressable onPress={props.onPress} style={styles.tile}>
       {props.imageUri ? (
         <Image source={{ uri: props.imageUri }} style={styles.img} />
       ) : (
@@ -16,7 +16,12 @@ export default function CardTile(props: {
           <Text style={styles.placeholderText}>🖼️</Text>
         </View>
       )}
-      <Text style={styles.label} numberOfLines={2}>{props.label}</Text>
+      <View style={styles.labelWrap}>
+        <Text style={styles.label} numberOfLines={2}>{props.label}</Text>
+        {props.secondaryLabel ? (
+          <Text style={styles.secondaryLabel} numberOfLines={2}>{props.secondaryLabel}</Text>
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -40,5 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f1f1", alignItems: "center", justifyContent: "center"
   },
   placeholderText: { fontSize: 28 },
+  labelWrap: { alignItems: "center", gap: 2 },
   label: { fontSize: 18, fontWeight: "700", textAlign: "center" },
+  secondaryLabel: { fontSize: 16, fontWeight: "600", color: "#555", textAlign: "center" },
 });
