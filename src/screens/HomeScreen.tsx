@@ -1,16 +1,23 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import * as Speech from "expo-speech";
 import React, { useContext, useState } from "react";
 import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { RootStackParamList, WorkbookContext } from "../App";
+import SentenceBar from "../UI/SentenceBar";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 export default function HomeScreen({ navigation }: Props) {
-  const { state } = useContext(WorkbookContext);
+  const { state, sentence, setSentence } = useContext(WorkbookContext);
   const [language, setLanguage] = useState<"EN" | "CH">("EN");
   if (!state) return null;
 
   const categories = [...state.categories].sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const speak = (text: string) => {
+    Speech.stop();
+    Speech.speak(text, { rate: state.settings.rate, voice: state.settings.voice });
+  };
 
   return (
     <View style={styles.container}>
@@ -30,25 +37,39 @@ export default function HomeScreen({ navigation }: Props) {
           </Pressable>
         )}
         ListHeaderComponent={
-          <View style={styles.headerRow}>
-            <View style={styles.titleWrap}>
-              <Image source={require("../../assets/images/icon.png")} style={styles.appIcon} />
-              <Text style={styles.titleText}>Kelly Handbook</Text>
+          <View style={styles.headerBlock}>
+            <View style={styles.headerRow}>
+              <View style={styles.titleWrap}>
+                <Image source={require("../../assets/images/icon.png")} style={styles.appIcon} />
+                <Text style={styles.titleText}>Kelly Handbook</Text>
+              </View>
+              <View style={styles.headerActions}>
+                <Pressable
+                  onPress={() => navigation.navigate("ParentPin", { next: "EditCategory" })}
+                  style={styles.addCategoryButton}
+                >
+                  <Text style={styles.addCategoryText}>＋ Category</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))}
+                  style={styles.langToggle}
+                >
+                  <Text style={styles.langText}>{language}</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => navigation.navigate("ParentPin", { next: "Settings" })}
+                  style={styles.moreButton}
+                >
+                  <Text style={styles.moreText}>⋯</Text>
+                </Pressable>
+              </View>
             </View>
-            <View style={styles.headerActions}>
-              <Pressable
-                onPress={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))}
-                style={styles.langToggle}
-              >
-                <Text style={styles.langText}>{language}</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => navigation.navigate("ParentPin", { next: "Settings" })}
-                style={styles.moreButton}
-              >
-                <Text style={styles.moreText}>⋯</Text>
-              </Pressable>
-            </View>
+            <SentenceBar
+              words={sentence}
+              onSpeak={() => speak(sentence.join(" "))}
+              onClear={() => setSentence([])}
+              onBackspace={() => setSentence((prev) => prev.slice(0, -1))}
+            />
           </View>
         }
       />
@@ -58,11 +79,14 @@ export default function HomeScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fafafa" },
+  headerBlock: { gap: 12, paddingBottom: 10 },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 10, gap: 12 },
   titleWrap: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
   appIcon: { width: 36, height: 36, borderRadius: 10 },
   titleText: { fontSize: 22, fontWeight: "900", color: "#222" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
+  addCategoryButton: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
+  addCategoryText: { fontWeight: "800" },
   langToggle: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
   langText: { fontWeight: "800" },
   moreButton: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },

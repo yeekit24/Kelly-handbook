@@ -11,6 +11,7 @@ export type AacCard = {
     categoryId: string;
     label: string;
     labelZh?: string;
+    language?: "EN" | "CH";
     speakText?: string;  // defaults to label
     imageUri?: string;   // local file uri from ImagePicker
     isQuick?: boolean;
