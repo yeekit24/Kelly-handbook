@@ -1,16 +1,15 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Speech from "expo-speech";
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useMemo } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { RootStackParamList, WorkbookContext } from "../App";
-import CardTile from "../ui/CardTile";
-import SentenceBar from "../ui/SentenceBar";
+import CardTile from "../UI/CardTile";
+import SentenceBar from "../UI/SentenceBar";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Category">;
 
 export default function CategoryScreen({ route, navigation }: Props) {
-  const { state } = useContext(WorkbookContext);
-  const [sentence, setSentence] = useState<string[]>([]);
+  const { state, sentence, setSentence } = useContext(WorkbookContext);
   const categoryId = route.params.categoryId;
 
   const category = state!.categories.find((c) => c.id === categoryId);
@@ -29,12 +28,15 @@ export default function CategoryScreen({ route, navigation }: Props) {
   React.useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Pressable onPress={() => navigation.navigate("ActionMenu")} style={styles.addActionButton}>
+        <Pressable
+          onPress={() => navigation.navigate("ParentPin", { next: "EditCard", params: { categoryId } })}
+          style={styles.addActionButton}
+        >
           <Text style={styles.addActionText}>Add Action</Text>
         </Pressable>
       ),
     });
-  }, [navigation]);
+  }, [navigation, categoryId]);
 
   const speak = (text: string) => {
     Speech.stop();
@@ -68,7 +70,11 @@ export default function CategoryScreen({ route, navigation }: Props) {
             label={item.label}
             secondaryLabel={item.labelZh}
             imageUri={item.imageUri}
-            onPress={() => onTapCard(item.label, item.speakText)}
+            onPress={() => {
+              const displayLabel = item.language === "CH" ? item.labelZh ?? item.label : item.label;
+              const fallbackSpeak = item.language === "CH" ? item.labelZh ?? item.label : item.label;
+              onTapCard(displayLabel, item.speakText ?? fallbackSpeak);
+            }}
           />
         )}
       />
