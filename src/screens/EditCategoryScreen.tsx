@@ -58,7 +58,13 @@ export default function EditCategoryScreen({ route, navigation }: Props) {
       } else {
         const existingMatchIndex = categories.findIndex((c) => c.name.toLowerCase() === normalized);
         if (existingMatchIndex >= 0) {
-          categories[existingMatchIndex] = { ...categories[existingMatchIndex], ...newCategory };
+          const existingMatch = categories[existingMatchIndex];
+          categories[existingMatchIndex] = {
+            ...existingMatch,
+            ...newCategory,
+            id: existingMatch.id,
+            sortOrder: existingMatch.sortOrder,
+          };
         } else {
           categories.push(newCategory);
         }
