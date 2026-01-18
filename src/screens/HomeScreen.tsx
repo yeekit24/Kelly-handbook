@@ -1,8 +1,9 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Speech from "expo-speech";
-import React, { useContext, useState } from "react";
-import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useContext, useMemo, useState } from "react";
+import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { RootStackParamList, WorkbookContext } from "../App";
+import CardTile from "../UI/CardTile";
 import SentenceBar from "../UI/SentenceBar";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
@@ -10,9 +11,19 @@ type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 export default function HomeScreen({ navigation }: Props) {
   const { state, sentence, setSentence } = useContext(WorkbookContext);
   const [language, setLanguage] = useState<"EN" | "CH">("EN");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const { width } = useWindowDimensions();
   if (!state) return null;
 
   const categories = [...state.categories].sort((a, b) => a.sortOrder - b.sortOrder);
+  const activeCategoryId = selectedCategoryId ?? categories[0]?.id ?? "";
+  const isTablet = width >= 768;
+
+  const cards = useMemo(() => {
+    return state.cards
+      .filter((c) => !c.isQuick && c.categoryId === activeCategoryId)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [state, activeCategoryId]);
 
   const speak = (text: string) => {
     Speech.stop();
@@ -21,58 +32,88 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={categories}
-        numColumns={2}
-        keyExtractor={(item) => item.id}
-        columnWrapperStyle={{ gap: 12 }}
-        contentContainerStyle={{ padding: 12, gap: 12 }}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => navigation.navigate("Category", { categoryId: item.id })}
-            style={[styles.tile, { backgroundColor: item.color ?? "#fff" }]}
-          >
-            <Text style={styles.emoji}>{item.emoji ?? "📘"}</Text>
-            <Text style={styles.name}>{item.name}</Text>
-          </Pressable>
-        )}
-        ListHeaderComponent={
-          <View style={styles.headerBlock}>
-            <View style={styles.headerRow}>
-              <View style={styles.titleWrap}>
-                <Image source={require("../../assets/images/icon.png")} style={styles.appIcon} />
-                <Text style={styles.titleText}>Kelly Handbook</Text>
-              </View>
-              <View style={styles.headerActions}>
-                <Pressable
-                  onPress={() => navigation.navigate("ParentPin", { next: "EditCategory" })}
-                  style={styles.addCategoryButton}
-                >
-                  <Text style={styles.addCategoryText}>＋ Category</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))}
-                  style={styles.langToggle}
-                >
-                  <Text style={styles.langText}>{language}</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => navigation.navigate("ParentPin", { next: "Settings" })}
-                  style={styles.moreButton}
-                >
-                  <Text style={styles.moreText}>⋯</Text>
-                </Pressable>
-              </View>
-            </View>
-            <SentenceBar
-              words={sentence}
-              onSpeak={() => speak(sentence.join(" "))}
-              onClear={() => setSentence([])}
-              onBackspace={() => setSentence((prev) => prev.slice(0, -1))}
-            />
+      <View style={styles.headerBlock}>
+        <View style={styles.headerRow}>
+          <View style={styles.titleWrap}>
+            <Text style={styles.appIcon}>📘</Text>
+            <Text style={styles.titleText}>Kelly Handbook</Text>
           </View>
-        }
-      />
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => navigation.navigate("ParentPin", { next: "EditCategory" })}
+              style={styles.addCategoryButton}
+            >
+              <Text style={styles.addCategoryText}>＋ Category</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))}
+              style={styles.langToggle}
+            >
+              <Text style={styles.langText}>{language}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate("ParentPin", { next: "Settings" })}
+              style={styles.moreButton}
+            >
+              <Text style={styles.moreText}>⋯</Text>
+            </Pressable>
+          </View>
+        </View>
+        <SentenceBar
+          words={sentence}
+          onSpeak={() => speak(sentence.join(" "))}
+          onClear={() => setSentence([])}
+          onBackspace={() => setSentence((prev) => prev.slice(0, -1))}
+        />
+      </View>
+
+      <View style={[styles.body, isTablet && styles.bodyTablet]}>
+        <FlatList
+          data={categories}
+          keyExtractor={(item) => item.id}
+          horizontal={!isTablet}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.categoryList, isTablet && styles.categoryListTablet]}
+          renderItem={({ item }) => {
+            const isActive = item.id === activeCategoryId;
+            return (
+              <Pressable
+                onPress={() => setSelectedCategoryId(item.id)}
+                style={[
+                  styles.categoryPill,
+                  isActive && styles.categoryPillActive,
+                  isTablet && styles.categoryPillTablet,
+                ]}
+              >
+                <Text style={styles.categoryEmoji}>{item.emoji ?? "📘"}</Text>
+                <Text style={styles.categoryText}>{item.name}</Text>
+              </Pressable>
+            );
+          }}
+        />
+
+        <FlatList
+          data={cards}
+          key={`${activeCategoryId}-${state.settings.gridColumns}`}
+          numColumns={state.settings.gridColumns}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.cardsGrid}
+          columnWrapperStyle={{ gap: 12 }}
+          renderItem={({ item }) => (
+            <CardTile
+              label={item.label}
+              secondaryLabel={item.labelZh}
+              imageUri={item.imageUri}
+              onPress={() => {
+                const displayLabel = item.language === "CH" ? item.labelZh ?? item.label : item.label;
+                const fallbackSpeak = item.language === "CH" ? item.labelZh ?? item.label : item.label;
+                setSentence((prev) => [...prev, displayLabel]);
+                if (state.settings.speakOnTap) speak(item.speakText ?? fallbackSpeak);
+              }}
+            />
+          )}
+        />
+      </View>
     </View>
   );
 }
@@ -82,7 +123,7 @@ const styles = StyleSheet.create({
   headerBlock: { gap: 12, paddingBottom: 10 },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 10, gap: 12 },
   titleWrap: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
-  appIcon: { width: 36, height: 36, borderRadius: 10 },
+  appIcon: { width: 36, height: 36, borderRadius: 10, textAlign: "center", fontSize: 26 },
   titleText: { fontSize: 22, fontWeight: "900", color: "#222" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
   addCategoryButton: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
@@ -91,7 +132,24 @@ const styles = StyleSheet.create({
   langText: { fontWeight: "800" },
   moreButton: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
   moreText: { fontSize: 22, fontWeight: "800", marginTop: -4 },
-  tile: { flex: 1, minHeight: 140, borderRadius: 18, padding: 14, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#eee" },
-  emoji: { fontSize: 34, marginBottom: 8 },
-  name: { fontSize: 20, fontWeight: "900" },
+  body: { flex: 1, gap: 12, paddingHorizontal: 12 },
+  bodyTablet: { flexDirection: "row", gap: 16 },
+  categoryList: { gap: 10, paddingBottom: 6 },
+  categoryListTablet: { flexGrow: 0, paddingBottom: 0 },
+  categoryPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#eee",
+    backgroundColor: "#fff",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  categoryPillActive: { backgroundColor: "#e6f0ff", borderColor: "#c7dcff" },
+  categoryPillTablet: { paddingVertical: 12, minWidth: 160, justifyContent: "flex-start" },
+  categoryEmoji: { fontSize: 20 },
+  categoryText: { fontSize: 16, fontWeight: "800" },
+  cardsGrid: { gap: 12, paddingBottom: 16, flexGrow: 1 },
 });
