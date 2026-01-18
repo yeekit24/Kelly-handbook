@@ -7,10 +7,37 @@ import CardTile from "../UI/CardTile";
 import SentenceBar from "../UI/SentenceBar";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
+type HomeNavigation = Props["navigation"];
 
-export default function HomeScreen({ navigation }: Props) {
-  const { state, sentence, setSentence } = useContext(WorkbookContext);
-  const [language, setLanguage] = useState<"EN" | "CH">("EN");
+export function HomeHeaderRow({ navigation }: { navigation: HomeNavigation }) {
+  const { language, setLanguage } = useContext(WorkbookContext);
+
+  return (
+    <View style={styles.headerRow}>
+      <View style={styles.titleWrap}>
+        <Image source={require("../../assets/images/icon.png")} style={styles.appIconImage} />
+        <Text style={styles.titleText}>Kelly Handbook</Text>
+      </View>
+      <View style={styles.headerActions}>
+        <Pressable
+          onPress={() => navigation.navigate("ParentPin", { next: "EditCategory" })}
+          style={styles.addCategoryButton}
+        >
+          <Text style={styles.addCategoryText}>＋ Category</Text>
+        </Pressable>
+        <Pressable onPress={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))} style={styles.langToggle}>
+          <Text style={styles.langText}>{language}</Text>
+        </Pressable>
+        <Pressable onPress={() => navigation.navigate("ParentPin", { next: "Settings" })} style={styles.moreButton}>
+          <Text style={styles.moreText}>⋯</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+export default function HomeScreen({}: Props) {
+  const { state, sentence, setSentence, language } = useContext(WorkbookContext);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const { width } = useWindowDimensions();
   if (!state) return null;
@@ -37,32 +64,6 @@ export default function HomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.headerBlock}>
-        <View style={styles.headerRow}>
-          <View style={styles.titleWrap}>
-            <Text style={styles.appIcon}>📘</Text>
-            <Text style={styles.titleText}>Kelly Handbook</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <Pressable
-              onPress={() => navigation.navigate("ParentPin", { next: "EditCategory" })}
-              style={styles.addCategoryButton}
-            >
-              <Text style={styles.addCategoryText}>＋ Category</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))}
-              style={styles.langToggle}
-            >
-              <Text style={styles.langText}>{language}</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate("ParentPin", { next: "Settings" })}
-              style={styles.moreButton}
-            >
-              <Text style={styles.moreText}>⋯</Text>
-            </Pressable>
-          </View>
-        </View>
         <SentenceBar
           words={sentence}
           onSpeak={() => speak(sentence.join(" "), language)}
@@ -116,16 +117,16 @@ export default function HomeScreen({ navigation }: Props) {
               return (
                 <Pressable
                   onPress={() => setSelectedCategoryId(item.id)}
-                  style={[styles.categoryPill, isActive && styles.categoryPillActive]}
+                  style={[styles.categoryPill, styles.categoryPillPhone, isActive && styles.categoryPillActive]}
                 >
                   {item.imageUri ? (
-                    <Image source={{ uri: item.imageUri }} style={styles.categoryImage} />
+                    <Image source={{ uri: item.imageUri }} style={styles.categoryImagePhone} />
                   ) : (
-                    <Text style={styles.categoryEmoji}>{item.emoji ?? "📘"}</Text>
+                    <Text style={styles.categoryEmojiPhone}>{item.emoji ?? "📘"}</Text>
                   )}
-                  <View style={styles.categoryTextWrap}>
-                    <Text style={styles.categoryText}>{item.name}</Text>
-                    {item.nameZh ? <Text style={styles.categorySubText}>{item.nameZh}</Text> : null}
+                  <View style={styles.categoryTextWrapPhone}>
+                    <Text style={styles.categoryTextPhone}>{item.name}</Text>
+                    {item.nameZh ? <Text style={styles.categorySubTextPhone}>{item.nameZh}</Text> : null}
                   </View>
                 </Pressable>
               );
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
   headerBlock: { gap: 12, paddingBottom: 10 },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 10, gap: 12 },
   titleWrap: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
-  appIcon: { width: 36, height: 36, borderRadius: 10, textAlign: "center", fontSize: 26 },
+  appIconImage: { width: 36, height: 36, borderRadius: 10 },
   titleText: { fontSize: 22, fontWeight: "900", color: "#222" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
   addCategoryButton: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
@@ -198,6 +199,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 6,
   },
+  categoryPillPhone: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    minWidth: 120,
+    justifyContent: "center",
+    flexDirection: "column",
+    gap: 6,
+  },
   categoryPillActive: { backgroundColor: "#e6f0ff", borderColor: "#c7dcff" },
   categoryPillTablet: { paddingVertical: 6, justifyContent: "flex-start" },
   categoryEmoji: { fontSize: 18 },
@@ -205,5 +214,10 @@ const styles = StyleSheet.create({
   categoryTextWrap: { gap: 1 },
   categoryText: { fontSize: 14, fontWeight: "800" },
   categorySubText: { fontSize: 12, fontWeight: "600", color: "#555" },
+  categoryEmojiPhone: { fontSize: 28 },
+  categoryImagePhone: { width: 56, height: 56, borderRadius: 12 },
+  categoryTextWrapPhone: { gap: 2, alignItems: "center" },
+  categoryTextPhone: { fontSize: 16, fontWeight: "800", textAlign: "center" },
+  categorySubTextPhone: { fontSize: 14, fontWeight: "600", color: "#555", textAlign: "center" },
   cardsGrid: { gap: 12, paddingBottom: 16, flexGrow: 1 },
 });
