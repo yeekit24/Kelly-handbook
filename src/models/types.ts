@@ -1,8 +1,10 @@
 export type Category = {
     id: string;
     name: string;
+    nameZh?: string;
     emoji?: string;      // simple icon for MVP
     color?: string;
+    imageUri?: string;
     sortOrder: number;
   };
   
@@ -11,6 +13,7 @@ export type AacCard = {
     categoryId: string;
     label: string;
     labelZh?: string;
+    language?: "EN" | "CH";
     speakText?: string;  // defaults to label
     imageUri?: string;   // local file uri from ImagePicker
     isQuick?: boolean;
