@@ -1,4 +1,5 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { AntDesign } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 import React, { useContext, useMemo, useState } from "react";
 import { FlatList, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
@@ -10,8 +11,6 @@ type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 type HomeNavigation = Props["navigation"];
 
 export function HomeHeaderRow({ navigation }: { navigation: HomeNavigation }) {
-  const { language, setLanguage } = useContext(WorkbookContext);
-
   return (
     <View style={styles.headerRow}>
       <View style={styles.titleWrap}>
@@ -22,14 +21,16 @@ export function HomeHeaderRow({ navigation }: { navigation: HomeNavigation }) {
         <Pressable
           onPress={() => navigation.navigate("ParentPin", { next: "EditCategory" })}
           style={styles.addCategoryButton}
+          accessibilityLabel="Add category"
         >
-          <Text style={styles.addCategoryText}>＋ Category</Text>
+          <AntDesign name="plus" size={18} color="#111" />
         </Pressable>
-        <Pressable onPress={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))} style={styles.langToggle}>
-          <Text style={styles.langText}>{language}</Text>
-        </Pressable>
-        <Pressable onPress={() => navigation.navigate("ParentPin", { next: "Settings" })} style={styles.moreButton}>
-          <Text style={styles.moreText}>⋯</Text>
+        <Pressable
+          onPress={() => navigation.navigate("ParentPin", { next: "Settings" })}
+          style={styles.moreButton}
+          accessibilityLabel="Open menu"
+        >
+          <AntDesign name="menu" size={24} color="#111" />
         </Pressable>
       </View>
     </View>
@@ -37,7 +38,7 @@ export function HomeHeaderRow({ navigation }: { navigation: HomeNavigation }) {
 }
 
 export default function HomeScreen({}: Props) {
-  const { state, sentence, setSentence, language } = useContext(WorkbookContext);
+  const { state, sentence, setSentence, language, setLanguage } = useContext(WorkbookContext);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const { width } = useWindowDimensions();
   if (!state) return null;
@@ -69,6 +70,8 @@ export default function HomeScreen({}: Props) {
           onSpeak={() => speak(sentence.join(" "), language)}
           onClear={() => setSentence([])}
           onBackspace={() => setSentence((prev) => prev.slice(0, -1))}
+          language={language}
+          onToggleLanguage={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))}
         />
       </View>
 
@@ -149,8 +152,15 @@ export default function HomeScreen({}: Props) {
               onPress={() => {
                 const displayLabel = item.language === "CH" ? item.labelZh ?? item.label : item.label;
                 const fallbackSpeak = item.language === "CH" ? item.labelZh ?? item.label : item.label;
-                setSentence((prev) => [...prev, displayLabel]);
-                if (state.settings.speakOnTap) speak(item.speakText ?? fallbackSpeak, item.language ?? "EN");
+                let didAdd = false;
+                setSentence((prev) => {
+                  if (prev.length >= 20) return prev;
+                  didAdd = true;
+                  return [...prev, displayLabel];
+                });
+                if (didAdd && state.settings.speakOnTap) {
+                  speak(item.speakText ?? fallbackSpeak, item.language ?? "EN");
+                }
               }}
             />
           )}
@@ -169,11 +179,7 @@ const styles = StyleSheet.create({
   titleText: { fontSize: 18, fontWeight: "900", color: "#222" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
   addCategoryButton: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
-  addCategoryText: { fontWeight: "800" },
-  langToggle: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
-  langText: { fontWeight: "800" },
   moreButton: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
-  moreText: { fontSize: 22, fontWeight: "800", marginTop: -4 },
   body: { flex: 1, gap: 12, paddingHorizontal: 12 },
   bodyTablet: { flexDirection: "row", gap: 16 },
   categoryList: { gap: 8, paddingBottom: 4 },
