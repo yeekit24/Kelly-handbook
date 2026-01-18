@@ -25,9 +25,13 @@ export default function HomeScreen({ navigation }: Props) {
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }, [state, activeCategoryId]);
 
-  const speak = (text: string) => {
+  const speak = (text: string, lang?: "EN" | "CH") => {
     Speech.stop();
-    Speech.speak(text, { rate: state.settings.rate, voice: state.settings.voice });
+    Speech.speak(text, {
+      rate: state.settings.rate,
+      voice: lang === "CH" ? undefined : state.settings.voice,
+      language: lang === "CH" ? "zh-CN" : undefined,
+    });
   };
 
   return (
@@ -61,7 +65,7 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
         <SentenceBar
           words={sentence}
-          onSpeak={() => speak(sentence.join(" "))}
+          onSpeak={() => speak(sentence.join(" "), language)}
           onClear={() => setSentence([])}
           onBackspace={() => setSentence((prev) => prev.slice(0, -1))}
         />
@@ -145,7 +149,7 @@ export default function HomeScreen({ navigation }: Props) {
                 const displayLabel = item.language === "CH" ? item.labelZh ?? item.label : item.label;
                 const fallbackSpeak = item.language === "CH" ? item.labelZh ?? item.label : item.label;
                 setSentence((prev) => [...prev, displayLabel]);
-                if (state.settings.speakOnTap) speak(item.speakText ?? fallbackSpeak);
+                if (state.settings.speakOnTap) speak(item.speakText ?? fallbackSpeak, item.language ?? "EN");
               }}
             />
           )}
