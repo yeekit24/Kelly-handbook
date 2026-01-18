@@ -68,36 +68,66 @@ export default function HomeScreen({ navigation }: Props) {
       </View>
 
       <View style={[styles.body, isTablet && styles.bodyTablet]}>
-        <FlatList
-          data={categories}
-          keyExtractor={(item) => item.id}
-          horizontal={!isTablet}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.categoryList, isTablet && styles.categoryListTablet]}
-          renderItem={({ item }) => {
-            const isActive = item.id === activeCategoryId;
-            return (
-              <Pressable
-                onPress={() => setSelectedCategoryId(item.id)}
-                style={[
-                  styles.categoryPill,
-                  isActive && styles.categoryPillActive,
-                  isTablet && styles.categoryPillTablet,
-                ]}
-              >
-                {item.imageUri ? (
-                  <Image source={{ uri: item.imageUri }} style={styles.categoryImage} />
-                ) : (
-                  <Text style={styles.categoryEmoji}>{item.emoji ?? "📘"}</Text>
-                )}
-                <View style={styles.categoryTextWrap}>
-                  <Text style={styles.categoryText}>{item.name}</Text>
-                  {item.nameZh ? <Text style={styles.categorySubText}>{item.nameZh}</Text> : null}
-                </View>
-              </Pressable>
-            );
-          }}
-        />
+        {isTablet ? (
+          <View style={styles.drawer}>
+            <FlatList
+              data={categories}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={[styles.categoryList, styles.categoryListTablet]}
+              renderItem={({ item }) => {
+                const isActive = item.id === activeCategoryId;
+                return (
+                  <Pressable
+                    onPress={() => setSelectedCategoryId(item.id)}
+                    style={[
+                      styles.categoryPill,
+                      isActive && styles.categoryPillActive,
+                      styles.categoryPillTablet,
+                    ]}
+                  >
+                    {item.imageUri ? (
+                      <Image source={{ uri: item.imageUri }} style={styles.categoryImage} />
+                    ) : (
+                      <Text style={styles.categoryEmoji}>{item.emoji ?? "📘"}</Text>
+                    )}
+                    <View style={styles.categoryTextWrap}>
+                      <Text style={styles.categoryText}>{item.name}</Text>
+                      {item.nameZh ? <Text style={styles.categorySubText}>{item.nameZh}</Text> : null}
+                    </View>
+                  </Pressable>
+                );
+              }}
+            />
+          </View>
+        ) : (
+          <FlatList
+            data={categories}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryList}
+            renderItem={({ item }) => {
+              const isActive = item.id === activeCategoryId;
+              return (
+                <Pressable
+                  onPress={() => setSelectedCategoryId(item.id)}
+                  style={[styles.categoryPill, isActive && styles.categoryPillActive]}
+                >
+                  {item.imageUri ? (
+                    <Image source={{ uri: item.imageUri }} style={styles.categoryImage} />
+                  ) : (
+                    <Text style={styles.categoryEmoji}>{item.emoji ?? "📘"}</Text>
+                  )}
+                  <View style={styles.categoryTextWrap}>
+                    <Text style={styles.categoryText}>{item.name}</Text>
+                    {item.nameZh ? <Text style={styles.categorySubText}>{item.nameZh}</Text> : null}
+                  </View>
+                </Pressable>
+              );
+            }}
+          />
+        )}
 
         <FlatList
           data={cards}
@@ -141,25 +171,35 @@ const styles = StyleSheet.create({
   moreText: { fontSize: 22, fontWeight: "800", marginTop: -4 },
   body: { flex: 1, gap: 12, paddingHorizontal: 12 },
   bodyTablet: { flexDirection: "row", gap: 16 },
-  categoryList: { gap: 10, paddingBottom: 6 },
-  categoryListTablet: { flexGrow: 0, paddingBottom: 0 },
+  categoryList: { gap: 8, paddingBottom: 4 },
+  categoryListTablet: { paddingVertical: 8, gap: 8 },
+  drawer: {
+    width: 210,
+    maxHeight: "92%",
+    alignSelf: "flex-start",
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#eee",
+    padding: 8,
+  },
   categoryPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "#eee",
     backgroundColor: "#fff",
     alignItems: "center",
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
   },
   categoryPillActive: { backgroundColor: "#e6f0ff", borderColor: "#c7dcff" },
-  categoryPillTablet: { paddingVertical: 12, minWidth: 160, justifyContent: "flex-start" },
-  categoryEmoji: { fontSize: 20 },
-  categoryImage: { width: 26, height: 26, borderRadius: 6 },
-  categoryTextWrap: { gap: 2 },
-  categoryText: { fontSize: 16, fontWeight: "800" },
-  categorySubText: { fontSize: 14, fontWeight: "600", color: "#555" },
+  categoryPillTablet: { paddingVertical: 8, justifyContent: "flex-start" },
+  categoryEmoji: { fontSize: 18 },
+  categoryImage: { width: 22, height: 22, borderRadius: 6 },
+  categoryTextWrap: { gap: 1 },
+  categoryText: { fontSize: 14, fontWeight: "800" },
+  categorySubText: { fontSize: 12, fontWeight: "600", color: "#555" },
   cardsGrid: { gap: 12, paddingBottom: 16, flexGrow: 1 },
 });
