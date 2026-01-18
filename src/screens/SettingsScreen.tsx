@@ -33,8 +33,25 @@ export default function SettingsScreen() {
       if (!parsed?.categories || !parsed?.cards || !parsed?.settings) {
         throw new Error("Invalid data file.");
       }
-      setState(parsed);
-      Alert.alert("Import complete", "Your data has been loaded on this device.");
+      const sanitizeImageUri = (uri?: string) => {
+        if (!uri) return undefined;
+        return uri.startsWith("file://") ? undefined : uri;
+      };
+
+      const sanitized = {
+        ...parsed,
+        categories: parsed.categories.map((category: any) => ({
+          ...category,
+          imageUri: sanitizeImageUri(category.imageUri),
+        })),
+        cards: parsed.cards.map((card: any) => ({
+          ...card,
+          imageUri: sanitizeImageUri(card.imageUri),
+        })),
+      };
+
+      setState(sanitized);
+      Alert.alert("Import complete", "Your data has been loaded on this device. Local images were cleared.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to import data.";
       Alert.alert("Import failed", message);
