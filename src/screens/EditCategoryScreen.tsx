@@ -1,7 +1,8 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import React, { useContext, useMemo, useState } from "react";
-import { Alert, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { RootStackParamList, WorkbookContext } from "../App";
 import { Category } from "../models/types";
 
@@ -20,6 +21,7 @@ export default function EditCategoryScreen({ route, navigation }: Props) {
   const [name, setName] = useState(existing?.name ?? "");
   const [nameZh, setNameZh] = useState(existing?.nameZh ?? "");
   const [imageUri, setImageUri] = useState(existing?.imageUri ?? "");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const categories = [...state!.categories].sort((a, b) => a.sortOrder - b.sortOrder);
 
@@ -32,6 +34,60 @@ export default function EditCategoryScreen({ route, navigation }: Props) {
       quality: 0.8,
     });
     if (!res.canceled) setImageUri(res.assets[0].uri);
+  };
+
+  const generateImage = async () => {
+    const prompt = name.trim() || nameZh.trim();
+    if (!prompt) return Alert.alert("Missing word", "Enter a word before generating an image.");
+    const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
+    if (!apiKey) {
+      return Alert.alert("Missing API key", "Set EXPO_PUBLIC_OPENAI_API_KEY to enable image generation.");
+    }
+
+    try {
+      setIsGenerating(true);
+      const res = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-image-1",
+          prompt,
+          size: "1024x1024",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || "Failed to generate image.");
+      }
+
+      const payload = await res.json();
+      const b64 = payload?.data?.[0]?.b64_json;
+      const url = payload?.data?.[0]?.url;
+      const fileUri = `${FileSystem.documentDirectory}category_${Date.now()}.png`;
+
+      if (b64) {
+        await FileSystem.writeAsStringAsync(fileUri, b64, { encoding: FileSystem.EncodingType.Base64 });
+        setImageUri(fileUri);
+        return;
+      }
+
+      if (url) {
+        const result = await FileSystem.downloadAsync(url, fileUri);
+        setImageUri(result.uri);
+        return;
+      }
+
+      throw new Error("No image returned from the API.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to generate image.";
+      Alert.alert("Image generation failed", message);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const save = () => {
@@ -128,16 +184,20 @@ export default function EditCategoryScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.menuRow}>
-        <Text style={styles.title}>Add Category</Text>
-        <Pressable style={styles.linkBtn} onPress={() => setMode("menu")}>
-          <Text style={styles.linkText}>Back</Text>
-        </Pressable>
-      </View>
+      <Text style={styles.title}>Add Category</Text>
 
       <Pressable style={styles.imgBox} onPress={pickImage}>
         {imageUri ? <Image source={{ uri: imageUri }} style={styles.img} /> : <Text style={styles.imgHint}>Tap to add image</Text>}
       </Pressable>
+
+      <View style={styles.imageActions}>
+        <Pressable style={styles.secondaryBtn} onPress={pickImage}>
+          <Text style={styles.secondaryBtnText}>Upload Photo</Text>
+        </Pressable>
+        <Pressable style={styles.secondaryBtn} onPress={generateImage} disabled={isGenerating}>
+          {isGenerating ? <ActivityIndicator /> : <Text style={styles.secondaryBtnText}>Generate Image</Text>}
+        </Pressable>
+      </View>
 
       <Text style={styles.label}>English word</Text>
       <TextInput value={name} onChangeText={setName} style={styles.input} placeholder="e.g., Food" />
@@ -161,8 +221,11 @@ const styles = StyleSheet.create({
   imgBox: { height: 160, borderRadius: 16, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee", alignItems: "center", justifyContent: "center" },
   img: { width: "100%", height: "100%", borderRadius: 16 },
   imgHint: { fontSize: 16, fontWeight: "800", color: "#666" },
+  imageActions: { flexDirection: "row", gap: 10 },
   label: { fontSize: 16, fontWeight: "800" },
   input: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee", borderRadius: 12, padding: 12, fontSize: 18 },
+  secondaryBtn: { flex: 1, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee", padding: 12, borderRadius: 12, alignItems: "center" },
+  secondaryBtnText: { fontSize: 14, fontWeight: "800" },
   btn: { marginTop: 8, backgroundColor: "#e6f0ff", padding: 14, borderRadius: 12, alignItems: "center" },
   btnText: { fontSize: 18, fontWeight: "900" },
   row: {

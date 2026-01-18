@@ -6,6 +6,8 @@ export default function SentenceBar(props: {
   onSpeak: () => void;
   onClear: () => void;
   onBackspace: () => void;
+  language: "EN" | "CH";
+  onToggleLanguage: () => void;
 }) {
   return (
     <View style={styles.wrap}>
@@ -22,6 +24,9 @@ export default function SentenceBar(props: {
       </ScrollView>
 
       <View style={styles.actions}>
+        <Pressable style={styles.btn} onPress={props.onToggleLanguage}>
+          <Text style={styles.btnText}>{props.language}</Text>
+        </Pressable>
         <Pressable style={styles.btn} onPress={props.onBackspace}><Text style={styles.btnText}>⌫</Text></Pressable>
         <Pressable style={styles.btn} onPress={props.onClear}><Text style={styles.btnText}>Clear</Text></Pressable>
         <Pressable style={[styles.btn, styles.speak]} onPress={props.onSpeak}><Text style={styles.btnText}>Speak</Text></Pressable>

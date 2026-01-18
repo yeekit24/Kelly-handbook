@@ -1,9 +1,11 @@
-import React, { useContext } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useContext, useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { WorkbookContext } from "../App";
 
 export default function SettingsScreen() {
   const { state, setState } = useContext(WorkbookContext);
+  const [exportJson, setExportJson] = useState("");
+  const [importJson, setImportJson] = useState("");
   const s = state!.settings;
 
   const setColumns = (n: 2 | 3 | 4) =>
@@ -18,6 +20,26 @@ export default function SettingsScreen() {
       const next = Math.min(2, Math.max(0.1, prev.settings.rate + delta));
       return { ...prev, settings: { ...prev.settings, rate: next } };
     });
+
+  const exportData = () => {
+    if (!state) return;
+    setExportJson(JSON.stringify(state, null, 2));
+    Alert.alert("Export ready", "Copy the JSON below to migrate data to another device.");
+  };
+
+  const importData = () => {
+    try {
+      const parsed = JSON.parse(importJson);
+      if (!parsed?.categories || !parsed?.cards || !parsed?.settings) {
+        throw new Error("Invalid data file.");
+      }
+      setState(parsed);
+      Alert.alert("Import complete", "Your data has been loaded on this device.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to import data.";
+      Alert.alert("Import failed", message);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -41,6 +63,29 @@ export default function SettingsScreen() {
         <View style={[styles.pill, styles.full]}><Text style={styles.pillText}>{s.rate.toFixed(2)}</Text></View>
         <Pressable onPress={() => adjustRate(0.1)} style={styles.pill}><Text style={styles.pillText}>+</Text></Pressable>
       </View>
+
+      <Text style={styles.h}>Data Transfer</Text>
+      <Pressable onPress={exportData} style={[styles.pill, styles.full]}>
+        <Text style={styles.pillText}>Generate Export</Text>
+      </Pressable>
+      <TextInput
+        value={exportJson}
+        style={styles.textArea}
+        multiline
+        editable={false}
+        placeholder="Export JSON will appear here."
+        selectTextOnFocus
+      />
+      <TextInput
+        value={importJson}
+        onChangeText={setImportJson}
+        style={styles.textArea}
+        multiline
+        placeholder="Paste JSON here to import data."
+      />
+      <Pressable onPress={importData} style={[styles.pill, styles.full]}>
+        <Text style={styles.pillText}>Import Data</Text>
+      </Pressable>
     </View>
   );
 }
@@ -53,4 +98,13 @@ const styles = StyleSheet.create({
   pillOn: { backgroundColor: "#e6f0ff" },
   pillText: { fontSize: 18, fontWeight: "900" },
   full: { flex: 1 },
+  textArea: {
+    minHeight: 120,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#eee",
+    backgroundColor: "#fff",
+    padding: 12,
+    fontSize: 14,
+  },
 });
