@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { WorkbookContext } from "../App";
+import { SEED } from "../data/seed";
 
 export default function SettingsScreen() {
   const { state, setState } = useContext(WorkbookContext);
@@ -51,6 +52,20 @@ export default function SettingsScreen() {
     }
   };
 
+  const resetToSeed = () => {
+    Alert.alert("Reset data?", "This will replace all current data with the original seed data.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Reset",
+        style: "destructive",
+        onPress: () => {
+          setState(SEED);
+          Alert.alert("Reset complete", "Seed data has been restored.");
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.h}>Grid Columns</Text>
@@ -84,6 +99,9 @@ export default function SettingsScreen() {
       />
       <Pressable onPress={importData} style={[styles.pill, styles.full]}>
         <Text style={styles.pillText}>Import Data</Text>
+      </Pressable>
+      <Pressable onPress={resetToSeed} style={[styles.pill, styles.full]}>
+        <Text style={styles.pillText}>Reset to Seed Data</Text>
       </Pressable>
     </View>
   );
