@@ -55,7 +55,6 @@ export default function EditCardScreen({ route, navigation }: Props) {
           model: "gpt-image-1",
           prompt,
           size: "1024x1024",
-          response_format: "b64_json",
         }),
       });
 
@@ -66,11 +65,22 @@ export default function EditCardScreen({ route, navigation }: Props) {
 
       const payload = await res.json();
       const b64 = payload?.data?.[0]?.b64_json;
-      if (!b64) throw new Error("No image returned from the API.");
-
+      const url = payload?.data?.[0]?.url;
       const fileUri = `${FileSystem.documentDirectory}card_${Date.now()}.png`;
-      await FileSystem.writeAsStringAsync(fileUri, b64, { encoding: FileSystem.EncodingType.Base64 });
-      setImageUri(fileUri);
+
+      if (b64) {
+        await FileSystem.writeAsStringAsync(fileUri, b64, { encoding: FileSystem.EncodingType.Base64 });
+        setImageUri(fileUri);
+        return;
+      }
+
+      if (url) {
+        const result = await FileSystem.downloadAsync(url, fileUri);
+        setImageUri(result.uri);
+        return;
+      }
+
+      throw new Error("No image returned from the API.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to generate image.";
       Alert.alert("Image generation failed", message);
