@@ -1,11 +1,10 @@
-import React, { useContext, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useContext } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { WorkbookContext } from "../App";
 import { SEED } from "../data/seed";
 
 export default function SettingsScreen() {
   const { state, setState } = useContext(WorkbookContext);
-  const [importJson, setImportJson] = useState("");
   const s = state!.settings;
 
   const setColumns = (n: 2 | 3 | 4) =>
@@ -21,36 +20,6 @@ export default function SettingsScreen() {
       return { ...prev, settings: { ...prev.settings, rate: next } };
     });
 
-  const importData = () => {
-    try {
-      const parsed = JSON.parse(importJson);
-      if (!parsed?.categories || !parsed?.cards || !parsed?.settings) {
-        throw new Error("Invalid data file.");
-      }
-      const sanitizeImageUri = (uri?: string) => {
-        if (!uri) return undefined;
-        return uri.startsWith("file://") ? undefined : uri;
-      };
-
-      const sanitized = {
-        ...parsed,
-        categories: parsed.categories.map((category: any) => ({
-          ...category,
-          imageUri: sanitizeImageUri(category.imageUri),
-        })),
-        cards: parsed.cards.map((card: any) => ({
-          ...card,
-          imageUri: sanitizeImageUri(card.imageUri),
-        })),
-      };
-
-      setState(sanitized);
-      Alert.alert("Import complete", "Your data has been loaded on this device. Local images were cleared.");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to import data.";
-      Alert.alert("Import failed", message);
-    }
-  };
 
   const resetToSeed = () => {
     Alert.alert("Reset data?", "This will replace all current data with the original seed data.", [
@@ -89,17 +58,6 @@ export default function SettingsScreen() {
         <Pressable onPress={() => adjustRate(0.1)} style={styles.pill}><Text style={styles.pillText}>+</Text></Pressable>
       </View>
 
-      <Text style={styles.h}>Data Transfer</Text>
-      <TextInput
-        value={importJson}
-        onChangeText={setImportJson}
-        style={styles.textArea}
-        multiline
-        placeholder="Paste JSON here to import data."
-      />
-      <Pressable onPress={importData} style={[styles.pill, styles.full]}>
-        <Text style={styles.pillText}>Import Data</Text>
-      </Pressable>
       <Pressable onPress={resetToSeed} style={[styles.pill, styles.full]}>
         <Text style={styles.pillText}>Reset to Seed Data</Text>
       </Pressable>
