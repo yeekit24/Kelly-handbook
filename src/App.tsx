@@ -1,5 +1,8 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Speech from "expo-speech";
 import React, { createContext, useEffect, useMemo, useState } from "react";
+import { Alert } from "react-native";
 
 import EditCardScreen from "./screens/EditCardScreen";
 import HomeScreen, { HomeHeaderRow } from "./screens/HomeScreen";
@@ -19,6 +22,7 @@ export type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const SPEECH_PROMPT_KEY = "AAC_SPEECH_PROMPTED";
 
 export const WorkbookContext = createContext<{
   state: WorkbookState | null;
@@ -49,6 +53,28 @@ export default function App() {
   useEffect(() => {
     if (!state) return;
     saveState(state);
+  }, [state]);
+
+  useEffect(() => {
+    if (!state) return;
+    const promptSpeech = async () => {
+      const prompted = await AsyncStorage.getItem(SPEECH_PROMPT_KEY);
+      if (prompted) return;
+      const voices = await Speech.getAvailableVoicesAsync();
+      if (!voices?.length) {
+        Alert.alert(
+          "Speech not available",
+          "Text-to-speech voices aren't available on this device. Please install a system voice in iOS Settings.",
+        );
+      } else {
+        Alert.alert(
+          "Enable speech",
+          "If you don't hear speech, check the ringer switch, volume, and Spoken Content settings in iOS.",
+        );
+      }
+      await AsyncStorage.setItem(SPEECH_PROMPT_KEY, "1");
+    };
+    void promptSpeech();
   }, [state]);
 
   const ctx = useMemo(
