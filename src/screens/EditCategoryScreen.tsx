@@ -135,12 +135,7 @@ export default function EditCategoryScreen({ route, navigation }: Props) {
   if (mode === "itemSelect") {
     return (
       <View style={styles.container}>
-        <View style={styles.menuRow}>
-          <Text style={styles.title}>Choose a category</Text>
-          <Pressable style={styles.linkBtn} onPress={() => setMode("menu")}>
-            <Text style={styles.linkText}>Back</Text>
-          </Pressable>
-        </View>
+        <Text style={styles.title}>Choose a category</Text>
         <FlatList
           data={categories}
           keyExtractor={(item) => item.id}
@@ -215,9 +210,6 @@ export default function EditCategoryScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fafafa", padding: 16, gap: 12 },
   title: { fontSize: 20, fontWeight: "900", color: "#222" },
-  menuRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  linkBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
-  linkText: { fontWeight: "800" },
   imgBox: { height: 160, borderRadius: 16, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee", alignItems: "center", justifyContent: "center" },
   img: { width: "100%", height: "100%", borderRadius: 16 },
   imgHint: { fontSize: 16, fontWeight: "800", color: "#666" },
