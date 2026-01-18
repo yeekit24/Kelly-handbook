@@ -1,8 +1,10 @@
 export type Category = {
     id: string;
     name: string;
+    nameZh?: string;
     emoji?: string;      // simple icon for MVP
     color?: string;
+    imageUri?: string;
     sortOrder: number;
   };
   

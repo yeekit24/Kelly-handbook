@@ -1,7 +1,7 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Speech from "expo-speech";
 import React, { useContext, useMemo, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { FlatList, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { RootStackParamList, WorkbookContext } from "../App";
 import CardTile from "../UI/CardTile";
 import SentenceBar from "../UI/SentenceBar";
@@ -85,8 +85,15 @@ export default function HomeScreen({ navigation }: Props) {
                   isTablet && styles.categoryPillTablet,
                 ]}
               >
-                <Text style={styles.categoryEmoji}>{item.emoji ?? "📘"}</Text>
-                <Text style={styles.categoryText}>{item.name}</Text>
+                {item.imageUri ? (
+                  <Image source={{ uri: item.imageUri }} style={styles.categoryImage} />
+                ) : (
+                  <Text style={styles.categoryEmoji}>{item.emoji ?? "📘"}</Text>
+                )}
+                <View style={styles.categoryTextWrap}>
+                  <Text style={styles.categoryText}>{item.name}</Text>
+                  {item.nameZh ? <Text style={styles.categorySubText}>{item.nameZh}</Text> : null}
+                </View>
               </Pressable>
             );
           }}
@@ -150,6 +157,9 @@ const styles = StyleSheet.create({
   categoryPillActive: { backgroundColor: "#e6f0ff", borderColor: "#c7dcff" },
   categoryPillTablet: { paddingVertical: 12, minWidth: 160, justifyContent: "flex-start" },
   categoryEmoji: { fontSize: 20 },
+  categoryImage: { width: 26, height: 26, borderRadius: 6 },
+  categoryTextWrap: { gap: 2 },
   categoryText: { fontSize: 16, fontWeight: "800" },
+  categorySubText: { fontSize: 14, fontWeight: "600", color: "#555" },
   cardsGrid: { gap: 12, paddingBottom: 16, flexGrow: 1 },
 });

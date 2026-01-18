@@ -2,12 +2,12 @@ import { WorkbookState } from "../models/types";
 
 export const SEED: WorkbookState = {
   categories: [
-    { id: "people", name: "People", emoji: "👨‍👩‍👧", color: "#E7F0FF", sortOrder: 1 },
-    { id: "food", name: "Food", emoji: "🍎", color: "#FFF3E6", sortOrder: 2 },
-    { id: "drinks", name: "Drinks", emoji: "🧃", color: "#EAFBF1", sortOrder: 3 },
-    { id: "feelings", name: "Feelings", emoji: "🙂", color: "#F3E8FF", sortOrder: 4 },
-    { id: "actions", name: "Actions", emoji: "🏃", color: "#EFFFF8", sortOrder: 5 },
-    { id: "help", name: "Help", emoji: "🆘", color: "#FFECEC", sortOrder: 6 },
+    { id: "people", name: "People", nameZh: "人", emoji: "👨‍👩‍👧", color: "#E7F0FF", sortOrder: 1 },
+    { id: "food", name: "Food", nameZh: "食物", emoji: "🍎", color: "#FFF3E6", sortOrder: 2 },
+    { id: "drinks", name: "Drinks", nameZh: "饮料", emoji: "🧃", color: "#EAFBF1", sortOrder: 3 },
+    { id: "feelings", name: "Feelings", nameZh: "感觉", emoji: "🙂", color: "#F3E8FF", sortOrder: 4 },
+    { id: "actions", name: "Actions", nameZh: "动作", emoji: "🏃", color: "#EFFFF8", sortOrder: 5 },
+    { id: "help", name: "Help", nameZh: "帮助", emoji: "🆘", color: "#FFECEC", sortOrder: 6 },
   ],
   cards: [
     // Quick
