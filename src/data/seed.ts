@@ -2,6 +2,7 @@ import { WorkbookState } from "../models/types";
 
 export const SEED: WorkbookState = {
   categories: [
+    // To seed a bundled image, set imageUri to Image.resolveAssetSource(require("path/to/image.png")).uri.
     { id: "people", name: "People", nameZh: "人", emoji: "👨‍👩‍👧", color: "#E7F0FF", sortOrder: 1 },
     { id: "food", name: "Food", nameZh: "食物", emoji: "🍎", color: "#FFF3E6", sortOrder: 2 },
     { id: "drinks", name: "Drinks", nameZh: "饮料", emoji: "🧃", color: "#EAFBF1", sortOrder: 3 },

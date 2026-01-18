@@ -4,7 +4,6 @@ import { WorkbookContext } from "../App";
 
 export default function SettingsScreen() {
   const { state, setState } = useContext(WorkbookContext);
-  const [exportJson, setExportJson] = useState("");
   const [importJson, setImportJson] = useState("");
   const s = state!.settings;
 
@@ -20,12 +19,6 @@ export default function SettingsScreen() {
       const next = Math.min(2, Math.max(0.1, prev.settings.rate + delta));
       return { ...prev, settings: { ...prev.settings, rate: next } };
     });
-
-  const exportData = () => {
-    if (!state) return;
-    setExportJson(JSON.stringify(state, null, 2));
-    Alert.alert("Export ready", "Copy the JSON below to migrate data to another device.");
-  };
 
   const importData = () => {
     try {
@@ -70,7 +63,7 @@ export default function SettingsScreen() {
       </View>
 
       <Text style={styles.h}>Speak on tap</Text>
-      <Pressable onPress={toggleSpeak} style={[styles.pill, styles.full]}>
+      <Pressable onPress={toggleSpeak} style={[styles.pill, styles.compactPill]}>
         <Text style={styles.pillText}>{s.speakOnTap ? "ON" : "OFF"}</Text>
       </Pressable>
 
@@ -82,17 +75,6 @@ export default function SettingsScreen() {
       </View>
 
       <Text style={styles.h}>Data Transfer</Text>
-      <Pressable onPress={exportData} style={[styles.pill, styles.full]}>
-        <Text style={styles.pillText}>Generate Export</Text>
-      </Pressable>
-      <TextInput
-        value={exportJson}
-        style={styles.textArea}
-        multiline
-        editable={false}
-        placeholder="Export JSON will appear here."
-        selectTextOnFocus
-      />
       <TextInput
         value={importJson}
         onChangeText={setImportJson}
@@ -115,6 +97,7 @@ const styles = StyleSheet.create({
   pillOn: { backgroundColor: "#e6f0ff" },
   pillText: { fontSize: 18, fontWeight: "900" },
   full: { flex: 1 },
+  compactPill: { alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 16, minWidth: 72 },
   textArea: {
     minHeight: 120,
     borderRadius: 14,
