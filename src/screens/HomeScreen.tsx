@@ -1,4 +1,5 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { AntDesign } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 import React, { useContext, useMemo, useState } from "react";
 import { FlatList, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
@@ -7,10 +8,37 @@ import CardTile from "../UI/CardTile";
 import SentenceBar from "../UI/SentenceBar";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
+type HomeNavigation = Props["navigation"];
 
-export default function HomeScreen({ navigation }: Props) {
-  const { state, sentence, setSentence } = useContext(WorkbookContext);
-  const [language, setLanguage] = useState<"EN" | "CH">("EN");
+export function HomeHeaderRow({ navigation }: { navigation: HomeNavigation }) {
+  return (
+    <View style={styles.headerRow}>
+      <View style={styles.titleWrap}>
+        <Image source={require("../../assets/images/icon.png")} style={styles.appIconImage} />
+        <Text style={styles.titleText}>Kelly Handbook</Text>
+      </View>
+      <View style={styles.headerActions}>
+        <Pressable
+          onPress={() => navigation.navigate("ParentPin", { next: "EditCategory" })}
+          style={styles.addCategoryButton}
+          accessibilityLabel="Add category"
+        >
+          <AntDesign name="plus" size={18} color="#111" />
+        </Pressable>
+        <Pressable
+          onPress={() => navigation.navigate("ParentPin", { next: "Settings" })}
+          style={styles.moreButton}
+          accessibilityLabel="Open menu"
+        >
+          <AntDesign name="menu" size={24} color="#111" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+export default function HomeScreen({}: Props) {
+  const { state, sentence, setSentence, language, setLanguage } = useContext(WorkbookContext);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const { width } = useWindowDimensions();
   if (!state) return null;
@@ -37,37 +65,13 @@ export default function HomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.headerBlock}>
-        <View style={styles.headerRow}>
-          <View style={styles.titleWrap}>
-            <Text style={styles.appIcon}>📘</Text>
-            <Text style={styles.titleText}>Kelly Handbook</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <Pressable
-              onPress={() => navigation.navigate("ParentPin", { next: "EditCategory" })}
-              style={styles.addCategoryButton}
-            >
-              <Text style={styles.addCategoryText}>＋ Category</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))}
-              style={styles.langToggle}
-            >
-              <Text style={styles.langText}>{language}</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate("ParentPin", { next: "Settings" })}
-              style={styles.moreButton}
-            >
-              <Text style={styles.moreText}>⋯</Text>
-            </Pressable>
-          </View>
-        </View>
         <SentenceBar
           words={sentence}
           onSpeak={() => speak(sentence.join(" "), language)}
           onClear={() => setSentence([])}
           onBackspace={() => setSentence((prev) => prev.slice(0, -1))}
+          language={language}
+          onToggleLanguage={() => setLanguage((current) => (current === "EN" ? "CH" : "EN"))}
         />
       </View>
 
@@ -116,16 +120,16 @@ export default function HomeScreen({ navigation }: Props) {
               return (
                 <Pressable
                   onPress={() => setSelectedCategoryId(item.id)}
-                  style={[styles.categoryPill, isActive && styles.categoryPillActive]}
+                  style={[styles.categoryPill, styles.categoryPillPhone, isActive && styles.categoryPillActive]}
                 >
                   {item.imageUri ? (
-                    <Image source={{ uri: item.imageUri }} style={styles.categoryImage} />
+                    <Image source={{ uri: item.imageUri }} style={styles.categoryImagePhone} />
                   ) : (
-                    <Text style={styles.categoryEmoji}>{item.emoji ?? "📘"}</Text>
+                    <Text style={styles.categoryEmojiPhone}>{item.emoji ?? "📘"}</Text>
                   )}
-                  <View style={styles.categoryTextWrap}>
-                    <Text style={styles.categoryText}>{item.name}</Text>
-                    {item.nameZh ? <Text style={styles.categorySubText}>{item.nameZh}</Text> : null}
+                  <View style={styles.categoryTextWrapPhone}>
+                    <Text style={styles.categoryTextPhone}>{item.name}</Text>
+                    {item.nameZh ? <Text style={styles.categorySubTextPhone}>{item.nameZh}</Text> : null}
                   </View>
                 </Pressable>
               );
@@ -148,8 +152,15 @@ export default function HomeScreen({ navigation }: Props) {
               onPress={() => {
                 const displayLabel = item.language === "CH" ? item.labelZh ?? item.label : item.label;
                 const fallbackSpeak = item.language === "CH" ? item.labelZh ?? item.label : item.label;
-                setSentence((prev) => [...prev, displayLabel]);
-                if (state.settings.speakOnTap) speak(item.speakText ?? fallbackSpeak, item.language ?? "EN");
+                let didAdd = false;
+                setSentence((prev) => {
+                  if (prev.length >= 20) return prev;
+                  didAdd = true;
+                  return [...prev, displayLabel];
+                });
+                if (didAdd && state.settings.speakOnTap) {
+                  speak(item.speakText ?? fallbackSpeak, item.language ?? "EN");
+                }
               }}
             />
           )}
@@ -164,15 +175,11 @@ const styles = StyleSheet.create({
   headerBlock: { gap: 12, paddingBottom: 10 },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 10, gap: 12 },
   titleWrap: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
-  appIcon: { width: 36, height: 36, borderRadius: 10, textAlign: "center", fontSize: 26 },
-  titleText: { fontSize: 22, fontWeight: "900", color: "#222" },
+  appIconImage: { width: 36, height: 36, borderRadius: 10 },
+  titleText: { fontSize: 18, fontWeight: "900", color: "#222" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
   addCategoryButton: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
-  addCategoryText: { fontWeight: "800" },
-  langToggle: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
-  langText: { fontWeight: "800" },
   moreButton: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee" },
-  moreText: { fontSize: 22, fontWeight: "800", marginTop: -4 },
   body: { flex: 1, gap: 12, paddingHorizontal: 12 },
   bodyTablet: { flexDirection: "row", gap: 16 },
   categoryList: { gap: 8, paddingBottom: 4 },
@@ -198,6 +205,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 6,
   },
+  categoryPillPhone: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    minWidth: 120,
+    justifyContent: "center",
+    flexDirection: "column",
+    gap: 6,
+  },
   categoryPillActive: { backgroundColor: "#e6f0ff", borderColor: "#c7dcff" },
   categoryPillTablet: { paddingVertical: 6, justifyContent: "flex-start" },
   categoryEmoji: { fontSize: 18 },
@@ -205,5 +220,10 @@ const styles = StyleSheet.create({
   categoryTextWrap: { gap: 1 },
   categoryText: { fontSize: 14, fontWeight: "800" },
   categorySubText: { fontSize: 12, fontWeight: "600", color: "#555" },
+  categoryEmojiPhone: { fontSize: 24 },
+  categoryImagePhone: { width: 48, height: 48, borderRadius: 10 },
+  categoryTextWrapPhone: { gap: 2, alignItems: "center" },
+  categoryTextPhone: { fontSize: 16, fontWeight: "800", textAlign: "center" },
+  categorySubTextPhone: { fontSize: 14, fontWeight: "600", color: "#555", textAlign: "center" },
   cardsGrid: { gap: 12, paddingBottom: 16, flexGrow: 1 },
 });
