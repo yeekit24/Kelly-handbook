@@ -36,7 +36,7 @@ export default function EditCardScreen({ route, navigation }: Props) {
   };
 
   const generateImage = async () => {
-    const prompt = label.trim() || labelZh.trim();
+    const prompt = `generate an image of ${label.trim() || labelZh.trim()} that i can use for AAC workbook`
     if (!prompt) return Alert.alert("Missing word", "Enter a word before generating an image.");
     const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
     if (!apiKey) {

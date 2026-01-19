@@ -37,7 +37,7 @@ export default function EditCategoryScreen({ route, navigation }: Props) {
   };
 
   const generateImage = async () => {
-    const prompt = name.trim() || nameZh.trim();
+    const prompt = `generate an image of ${name.trim() || nameZh.trim()} that i can use for AAC workbook` 
     if (!prompt) return Alert.alert("Missing word", "Enter a word before generating an image.");
     const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
     if (!apiKey) {
