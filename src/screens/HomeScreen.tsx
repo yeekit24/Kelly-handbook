@@ -1,7 +1,7 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AntDesign } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useMemo, useRef, useState } from "react";
 import { FlatList, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { RootStackParamList, WorkbookContext } from "../App";
 import CardTile from "../UI/CardTile";
@@ -41,6 +41,7 @@ export default function HomeScreen({}: Props) {
   const { state, sentence, setSentence, language, setLanguage } = useContext(WorkbookContext);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const { width } = useWindowDimensions();
+  const speakRequestId = useRef(0);
   if (!state) return null;
 
   const categories = [...state.categories].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -53,9 +54,19 @@ export default function HomeScreen({}: Props) {
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }, [state, activeCategoryId]);
 
-  const speak = (text: string, lang?: "EN" | "CH") => {
+  const speak = async (text: string, lang?: "EN" | "CH") => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    speakRequestId.current += 1;
+    const requestId = speakRequestId.current;
     Speech.stop();
-    Speech.speak(text, {
+    const start = Date.now();
+    while (await Speech.isSpeakingAsync()) {
+      if (Date.now() - start > 300) break;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    if (requestId !== speakRequestId.current) return;
+    Speech.speak(trimmed, {
       rate: state.settings.rate,
       voice: lang === "CH" ? undefined : state.settings.voice,
       language: lang === "CH" ? "zh-CN" : undefined,
@@ -82,6 +93,7 @@ export default function HomeScreen({}: Props) {
               data={categories}
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
+              style={styles.categoryListContainer}
               contentContainerStyle={[styles.categoryList, styles.categoryListTablet]}
               renderItem={({ item }) => {
                 const isActive = item.id === activeCategoryId;
@@ -114,6 +126,7 @@ export default function HomeScreen({}: Props) {
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.categoryListContainer}
             contentContainerStyle={styles.categoryList}
             renderItem={({ item }) => {
               const isActive = item.id === activeCategoryId;
@@ -142,8 +155,15 @@ export default function HomeScreen({}: Props) {
           key={`${activeCategoryId}-${state.settings.gridColumns}`}
           numColumns={state.settings.gridColumns}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.cardsGrid}
+          style={styles.cardsList}
+          contentContainerStyle={[styles.cardsGrid, !cards.length && styles.cardsGridEmpty]}
           columnWrapperStyle={{ gap: 12 }}
+          showsVerticalScrollIndicator
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No cards yet.</Text>
+            </View>
+          }
           renderItem={({ item }) => (
             <CardTile
               label={item.label}
@@ -184,6 +204,7 @@ const styles = StyleSheet.create({
   bodyTablet: { flexDirection: "row", gap: 16 },
   categoryList: { gap: 8, paddingBottom: 4 },
   categoryListTablet: { paddingVertical: 8, gap: 8 },
+  categoryListContainer: { flexGrow: 0 },
   drawer: {
     width: 210,
     maxHeight: "92%",
@@ -225,5 +246,9 @@ const styles = StyleSheet.create({
   categoryTextWrapPhone: { gap: 2, alignItems: "center" },
   categoryTextPhone: { fontSize: 16, fontWeight: "800", textAlign: "center" },
   categorySubTextPhone: { fontSize: 14, fontWeight: "600", color: "#555", textAlign: "center" },
-  cardsGrid: { gap: 12, paddingBottom: 16, flexGrow: 1 },
+  cardsList: { flex: 1 },
+  cardsGrid: { gap: 12, paddingBottom: 16 },
+  cardsGridEmpty: { flexGrow: 1, justifyContent: "center" },
+  emptyState: { alignItems: "center", paddingVertical: 20 },
+  emptyStateText: { fontSize: 16, fontWeight: "700", color: "#666" },
 });
